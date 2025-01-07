@@ -1,0 +1,9 @@
+1.โหลด grbl version ที่ support servo ->> https://github.com/robottini/grbl-servo
+2.upload ลงหุ่นยนต์ แล้ว test ผ่านserial monitor
+3.โหลด ugs platform ->> https://universalgcodesender.com/download/ [ใช้ส่งไฟล์gcode]
+4.create svg with ink-scape
+	 [use document 100*100 mm]
+	obj to path
+	export as plain svg
+5.use python code convert form svg to gcode 
+6. run gcode file with ugs
