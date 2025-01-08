@@ -3,7 +3,7 @@ from tkinter import filedialog, messagebox
 import math
 import svgpathtools
 
-def svg_to_gcode(input_svg, output_gcode, divisor, feedrate=1000, z_move_height=1):
+def svg_to_gcode(input_svg, output_gcode, divisor, feedrate=1000, z_move_height=1, samples_per_curve=20):
     # Open SVG file
     paths, _ = svgpathtools.svg2paths(input_svg)
 
@@ -16,16 +16,24 @@ def svg_to_gcode(input_svg, output_gcode, divisor, feedrate=1000, z_move_height=
 
         # Iterate through paths
         for path in paths:
-            # Write the initial position
+            # For each path, write the initial position
             for segment in path:
-                # For each segment, extract points
-                start = segment.start
-                end = segment.end
+                # Break curves into linear approximations
+                points = [
+                    segment.point(t)
+                    for t in [i / samples_per_curve for i in range(samples_per_curve + 1)]
+                ]
 
+                # Move to the start point
+                start = points[0]
                 f.write(f"G0 X{start.real / divisor:.3f} Y{start.imag / divisor:.3f}\n")
-                f.write(f"M03 S255\n")
-                f.write(f"G1 X{end.real / divisor:.3f} Y{end.imag / divisor:.3f} F{feedrate / divisor} \n")
-                f.write(f"M05\n")
+                f.write(f"M03 S255\n")  # Turn on the tool
+
+                # Draw each line segment
+                for point in points[1:]:
+                    f.write(f"G1 X{point.real / divisor:.3f} Y{point.imag / divisor:.3f} F{feedrate}\n")
+
+                f.write(f"M05\n")  # Turn off the tool
 
         # End G-code
         f.write("G0 X0 Y0 ; Move to origin\n")
